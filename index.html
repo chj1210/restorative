@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互動式校園霸凌調和案例分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: The application is designed as a guided journey. It starts with the human story (the case) to engage the user, then presents the critical choice (Mediation vs. Investigation) to establish context. The core of the app is an interactive flowchart of the mediation process, allowing users to explore each step non-linearly. This is followed by a practical, interactive "Dialogue Toolkit" for the NVC method. The structure prioritizes experiential learning over linear text consumption, making complex procedures and concepts more digestible and memorable for parents and educators. -->
+    <!-- Visualization & Content Choices: 1. Case Timeline (HTML/CSS): Goal=Organize, Presents the case progression visually. Interaction=Click to reveal details. Justification=More engaging than a list. 2. Mediation vs. Investigation (HTML/CSS + Chart.js Radar): Goal=Compare, Highlights the differences. Interaction=Clickable cards and a summary radar chart. Justification=Transforms a static table into an interactive comparison tool. 3. Mediation Process Flowchart (HTML/CSS): Goal=Organize, Explains the procedure. Interaction=Click steps to see details. Justification=Visualizes the process, enhancing comprehension. 4. NVC Interactive Tool (HTML/CSS): Goal=Demonstrate, Teaches a communication skill. Interaction=Click to transform conflict language. Justification=Provides a hands-on learning experience. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #FDFBF8; 
+            color: #333;
+        }
+        .active-nav {
+            color: #047857; 
+            font-weight: 700;
+            border-bottom: 2px solid #047857;
+        }
+        .inactive-nav {
+            color: #444;
+            border-bottom: 2px solid transparent;
+        }
+        .content-card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            border: 1px solid #E5E7EB;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            transition: all 0.3s ease-in-out;
+        }
+        .process-step {
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .process-step.active {
+            background-color: #047857;
+            color: white;
+            transform: scale(1.05);
+        }
+        .process-step:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9CA3AF;
+            font-size: 1.5rem;
+        }
+        @media (max-width: 768px) {
+            .process-step:not(:last-child)::after {
+                content: '↓';
+                right: 50%;
+                top: 100%;
+                transform: translateX(50%);
+                margin-top: 0.5rem;
+                margin-bottom: 0.5rem;
+            }
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-[#FDFBF8] text-stone-800">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-teal-800">校園霸凌調和指南_許福能8/21</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#intro" class="nav-link px-3 py-2 rounded-md text-sm font-medium inactive-nav">核心概念</a>
+                        <a href="#case" class="nav-link px-3 py-2 rounded-md text-sm font-medium inactive-nav">案例情境</a>
+                        <a href="#choice" class="nav-link px-3 py-2 rounded-md text-sm font-medium inactive-nav">關鍵選擇</a>
+                        <a href="#process" class="nav-link px-3 py-2 rounded-md text-sm font-medium inactive-nav">調和之旅</a>
+                        <a href="#toolkit" class="nav-link px-3 py-2 rounded-md text-sm font-medium inactive-nav">溝通工具箱</a>
+                        <a href="#outlook" class="nav-link px-3 py-2 rounded-md text-sm font-medium inactive-nav">展望與建議</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        
+        <section id="intro" class="text-center mb-16 scroll-mt-20">
+            <h2 class="text-3xl md:text-4xl font-bold text-teal-800 mb-4">解構校園霸凌調和：一份互動式案例分析</h2>
+            <p class="max-w-3xl mx-auto text-stone-600">
+                本頁面將複雜的《校園霸凌防制準則》轉化為一場引導式的互動旅程。我們將透過一個模擬案例，帶您深入了解新制度下的「調和」程序，從法律定義、實務操作到核心溝通技巧，讓您輕鬆掌握如何以更具教育意義的方式，修復校園中的人際衝突。
+            </p>
+        </section>
+
+        <section id="concepts" class="mb-16 scroll-mt-20">
+            <h3 class="text-2xl font-bold text-center text-teal-800 mb-8">新準則下的核心概念</h3>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="content-card p-6">
+                    <h4 class="font-bold text-lg mb-2 text-amber-700">霸凌的四個要件</h4>
+                    <p class="text-sm text-stone-600">構成法律上的「霸凌」，必須同時滿足**故意**、**侵害行為**、**造成損害**與**持續性**四個條件，缺一不可。此定義旨在區分偶發衝突與長期傷害。</p>
+                </div>
+                <div class="content-card p-6">
+                    <h4 class="font-bold text-lg mb-2 text-amber-700">準用霸凌</h4>
+                    <p class="text-sm text-stone-600">為處理**單次但嚴重**的故意身體傷害事件而設。即使缺乏「持續性」，這類事件也能進入調和或調查程序，提供修復關係的機會，而不僅是懲處。</p>
+                </div>
+                <div class="content-card p-6">
+                    <h4 class="font-bold text-lg mb-2 text-amber-700">修復式正義</h4>
+                    <p class="text-sm text-stone-600">調和程序的哲學核心。重點不在懲罰，而在於**修復傷害**、**重建關係**，並賦予雙方當事人解決問題的能力，將衝突轉化為學習的契機。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="case" class="mb-16 scroll-mt-20">
+            <h3 class="text-2xl font-bold text-center text-teal-800 mb-2">案例情境：一場逐漸升溫的風暴</h3>
+            <p class="text-center text-stone-600 mb-8 max-w-2xl mx-auto">本案例主角為轉學生小文與人緣佳的小強。整個事件並非一蹴可幾，而是經歷三個階段的演變。</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-0">
+                <div id="timeline-stage-1" class="timeline-stage text-center p-4 cursor-pointer" data-content="case-content-1">
+                    <div class="p-4 bg-white rounded-lg border-2 border-amber-200">
+                        <div class="text-3xl mb-2">①</div>
+                        <h4 class="font-bold">關係霸凌</h4>
+                        <p class="text-sm text-stone-500">社交孤立</p>
+                    </div>
+                </div>
+                <div class="text-2xl text-stone-400 mx-4 hidden md:block">→</div>
+                <div class="text-2xl text-stone-400 my-2 md:hidden">↓</div>
+                <div id="timeline-stage-2" class="timeline-stage text-center p-4 cursor-pointer" data-content="case-content-2">
+                    <div class="p-4 bg-white rounded-lg border-2 border-transparent">
+                        <div class="text-3xl mb-2">②</div>
+                        <h4 class="font-bold">網路霸凌</h4>
+                        <p class="text-sm text-stone-500">嘲諷與羞辱</p>
+                    </div>
+                </div>
+                <div class="text-2xl text-stone-400 mx-4 hidden md:block">→</div>
+                <div class="text-2xl text-stone-400 my-2 md:hidden">↓</div>
+                <div id="timeline-stage-3" class="timeline-stage text-center p-4 cursor-pointer" data-content="case-content-3">
+                    <div class="p-4 bg-white rounded-lg border-2 border-transparent">
+                        <div class="text-3xl mb-2">③</div>
+                        <h4 class="font-bold">肢體衝突</h4>
+                        <p class="text-sm text-stone-500">準用霸凌</p>
+                    </div>
+                </div>
+            </div>
+            <div id="case-content-display" class="mt-8 content-card p-6 min-h-[150px]">
+                <div id="case-content-1" class="case-content">
+                    <h5 class="font-bold text-amber-700">第一階段：關係霸凌與社交孤立</h5>
+                    <p class="text-stone-700 mt-2">小強及其朋友開始在課堂分組及下課時間刻意排擠轉學生小文。他們私下成立通訊軟體群組，在其中嘲笑小文的穿著和個性。此行為持續數週，已具備霸凌定義中的「持續性」特徵。</p>
+                </div>
+                <div id="case-content-2" class="case-content hidden">
+                    <h5 class="font-bold text-amber-700">第二階段：網路霸凌</h5>
+                    <p class="text-stone-700 mt-2">群組中嘲諷小文的對話截圖被洩漏至班級大群組，甚至有人利用小文的照片製作成迷因(meme)流傳。此舉將傷害擴大，使小文在線上線下都處於敵意環境中。</p>
+                </div>
+                <div id="case-content-3" class="case-content hidden">
+                    <h5 class="font-bold text-amber-700">第三階段：肢體衝突（準用霸凌）</h5>
+                    <p class="text-stone-700 mt-2">小文在極度困擾下與小強當面對質，雙方口角後，小強用力將小文推向儲物櫃，導致小文手臂瘀傷。此單次的故意肢體傷害行為，觸發「準用霸凌」規定。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="choice" class="mb-16 scroll-mt-20">
+            <h3 class="text-2xl font-bold text-center text-teal-800 mb-2">十字路口上的關鍵選擇</h3>
+            <p class="text-center text-stone-600 mb-8 max-w-2xl mx-auto">事件通報後，雙方家長面臨一個重要選擇：要走上以修復關係為主的「調和」之路，還是以釐清事實為主的「調查」之路？</p>
+            <div class="grid md:grid-cols-2 gap-8 items-start">
+                <div class="flex flex-col gap-4">
+                    <div id="choice-mediation" class="choice-card content-card p-6 cursor-pointer border-2 border-teal-600">
+                        <h4 class="font-bold text-xl text-teal-700">調和程序</h4>
+                        <p class="mt-2 text-stone-600">**目標**：修復關係、彌補傷害、達成共識。<br>**基礎**：雙方自願參與。<br>**焦點**：促進對話，共同尋找解決方案。<br>**產出**：雙方簽署的調和協議書。</p>
+                    </div>
+                    <div id="choice-investigation" class="choice-card content-card p-6 cursor-pointer border-2 border-stone-300 opacity-70">
+                        <h4 class="font-bold text-xl text-stone-700">調查程序</h4>
+                        <p class="mt-2 text-stone-600">**目標**：釐清事實、認定霸凌、追究責任。<br>**基礎**：相關人員有配合義務。<br>**焦點**：蒐集證據，釐清責任歸屬。<br>**產出**：認定霸凌是否成立的調查報告。</p>
+                    </div>
+                </div>
+                <div>
+                    <div class="content-card p-4">
+                        <div class="chart-container">
+                            <canvas id="choiceChart"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-stone-500 mt-2">兩種程序在核心理念上的差異</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="process" class="mb-16 scroll-mt-20">
+            <h3 class="text-2xl font-bold text-center text-teal-800 mb-2">調和之旅：六個關鍵步驟</h3>
+            <p class="text-center text-stone-600 mb-8 max-w-2xl mx-auto">調和並非單純的「坐下來談」，而是一個有結構、有程序的嚴謹過程。點擊下方步驟，了解每一步的具體內容。</p>
+            <div class="flex flex-col md:flex-row justify-between items-center gap-y-8 md:gap-x-12 text-center">
+                <div data-step="1" class="process-step p-3 rounded-full bg-stone-200 w-32 h-32 flex items-center justify-center active">Step 1<br>受理與準備</div>
+                <div data-step="2" class="process-step p-3 rounded-full bg-stone-200 w-32 h-32 flex items-center justify-center">Step 2<br>關鍵會前會</div>
+                <div data-step="3" class="process-step p-3 rounded-full bg-stone-200 w-32 h-32 flex items-center justify-center">Step 3<br>調和會議</div>
+                <div data-step="4" class="process-step p-3 rounded-full bg-stone-200 w-32 h-32 flex items-center justify-center">Step 4<br>達成協議</div>
+                <div data-step="5" class="process-step p-3 rounded-full bg-stone-200 w-32 h-32 flex items-center justify-center">Step 5<br>撰寫報告</div>
+                <div data-step="6" class="process-step p-3 rounded-full bg-stone-200 w-32 h-32 flex items-center justify-center">Step 6<br>後續輔導</div>
+            </div>
+            <div class="mt-8 content-card p-6 min-h-[200px]">
+                <div id="process-content-1" class="process-content">
+                    <h4 class="font-bold text-lg text-amber-700">Step 1: 受理申請與準備</h4>
+                    <p class="mt-2 text-stone-700">學校接獲申請後，由「審查小組」決議是否受理。一旦受理，即需組成包含至少半數校外專家的「處理小組」，確保程序的公正與專業。這是整個調和程序的法定起點。</p>
+                </div>
+                <div id="process-content-2" class="process-content hidden">
+                    <h4 class="font-bold text-lg text-amber-700">Step 2: 關鍵的會前會</h4>
+                    <p class="mt-2 text-stone-700">處理小組需**分別**與雙方當事人及其家長進行獨立的會前會。此階段目的不在蒐證，而是建立信任、說明程序、探詢意願，並將對立的雙方引導至願意嘗試對話的起點。這是調和成功的基石。</p>
+                </div>
+                <div id="process-content-3" class="process-content hidden">
+                    <h4 class="font-bold text-lg text-amber-700">Step 3: 調和會議</h4>
+                    <p class="mt-2 text-stone-700">在專業調和者的引導下，雙方在一個安全、平等的空間中進行對話。調和者運用非暴力溝通等技巧，協助雙方表達感受與需求，並從指責轉向理解，共同尋找解決方案。</p>
+                </div>
+                <div id="process-content-4" class="process-content hidden">
+                    <h4 class="font-bold text-lg text-amber-700">Step 4: 達成協議</h4>
+                    <p class="mt-2 text-stone-700">當雙方達成共識後，調和者會協助他們將共識轉化為具體、可行的書面協議。這份協議由當事人共同創造，內容可能包括道歉、承諾未來互動方式等，並由學生與家長共同簽署。</p>
+                </div>
+                <div id="process-content-5" class="process-content hidden">
+                    <h4 class="font-bold text-lg text-amber-700">Step 5: 撰寫調和報告</h4>
+                    <p class="mt-2 text-stone-700">處理小組需完成一份正式的調和報告，內容包含調和歷程、協議書全文，以及對學校的處理建議。此報告將提交給校內的「校園霸凌防制委員會」審議，完成法定程序。</p>
+                </div>
+                <div id="process-content-6" class="process-content hidden">
+                    <h4 class="font-bold text-lg text-amber-700">Step 6: 後續輔導</h4>
+                    <p class="mt-2 text-stone-700">調和協議並非終點。學校需根據協議內容與學生狀況，啟動長期的個別化輔導計畫，協助雙方處理創傷、學習新技能，並從系統層面預防問題再次發生，真正落實教育意義。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="toolkit" class="mb-16 scroll-mt-20">
+            <h3 class="text-2xl font-bold text-center text-teal-800 mb-2">溝通工具箱：非暴力溝通 (NVC)</h3>
+            <p class="text-center text-stone-600 mb-8 max-w-2xl mx-auto">調和的核心技巧之一是「非暴力溝通」，它能將指責的語言轉化為連結的橋樑。試著點擊按鈕，看看如何轉化一句典型的衝突語言。</p>
+            <div class="content-card p-8">
+                <p class="text-center text-stone-500 mb-4">典型的衝突語言：</p>
+                <p id="nvc-before" class="text-center text-2xl font-bold text-red-600">"你總是針對我！"</p>
+                <div class="text-center my-6">
+                    <button id="nvc-transform-btn" class="bg-amber-600 text-white font-bold py-2 px-6 rounded-full hover:bg-amber-700 transition-colors">
+                        ↓ 運用 NVC 轉化 ↓
+                    </button>
+                </div>
+                <div id="nvc-after" class="hidden grid md:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <h5 class="font-bold text-teal-700">① 觀察</h5>
+                        <p class="text-sm mt-1 bg-teal-50 p-3 rounded-lg">"在過去兩週，當我想加入你們時，我看到你們轉過身去小聲說話。"</p>
+                    </div>
+                    <div>
+                        <h5 class="font-bold text-teal-700">② 感受</h5>
+                        <p class="text-sm mt-1 bg-teal-50 p-3 rounded-lg">"當那樣的情況發生時，我感到很受傷，覺得自己被排斥了。"</p>
+                    </div>
+                    <div>
+                        <h5 class="font-bold text-teal-700">③ 需要</h5>
+                        <p class="text-sm mt-1 bg-teal-50 p-3 rounded-lg">"因為我內心深處需要被接納和尊重。"</p>
+                    </div>
+                    <div>
+                        <h5 class="font-bold text-teal-700">④ 請求</h5>
+                        <p class="text-sm mt-1 bg-teal-50 p-3 rounded-lg">"你是否願意告訴我發生了什麼事，讓我們找到一個和平共處的方法？"</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="outlook" class="scroll-mt-20">
+            <h3 class="text-2xl font-bold text-center text-teal-800 mb-8">展望與建議：從個案到系統</h3>
+            <p class="text-center text-stone-600 mb-8 max-w-2xl mx-auto">成功的調和不僅解決單一事件，更能成為推動校園文化變革的契機。以下是從本案例延伸的關鍵洞察與建議。</p>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="content-card p-6">
+                    <h4 class="font-bold text-lg mb-2 text-amber-700">成功的關鍵因素</h4>
+                    <ul class="list-disc list-inside text-sm text-stone-600 space-y-1">
+                        <li>程序的嚴謹性</li>
+                        <li>調和者的專業能力</li>
+                        <li>當事人的參與意願</li>
+                    </ul>
+                </div>
+                <div class="content-card p-6">
+                    <h4 class="font-bold text-lg mb-2 text-amber-700">實務上的挑戰</h4>
+                    <ul class="list-disc list-inside text-sm text-stone-600 space-y-1">
+                        <li>高衝突家長的情緒管理</li>
+                        <li>處理雙方權力不對等</li>
+                        <li>平衡保密性與社群修復</li>
+                    </ul>
+                </div>
+                <div class="content-card p-6 md:col-span-2 lg:col-span-1">
+                    <h4 class="font-bold text-lg mb-2 text-amber-700">給學校的建議</h4>
+                    <ul class="list-disc list-inside text-sm text-stone-600 space-y-1">
+                        <li>建立積極的預防文化</li>
+                        <li>加強親職教育與溝通</li>
+                        <li>將社會情緒學習融入課程</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-100 border-t border-stone-200 mt-16">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-sm text-stone-500">
+            <p>本頁面內容根據《校園生對生霸凌事件調和程序案例分析報告》進行改編與視覺化呈現，僅供教育與參考目的。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.4
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active-nav');
+                            link.classList.add('inactive-nav');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active-nav');
+                                link.classList.remove('inactive-nav');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            const timelineStages = document.querySelectorAll('.timeline-stage');
+            const caseContents = document.querySelectorAll('.case-content');
+            timelineStages.forEach(stage => {
+                stage.addEventListener('click', () => {
+                    const contentId = stage.dataset.content;
+                    
+                    timelineStages.forEach(s => s.querySelector('div').classList.remove('border-amber-200'));
+                    stage.querySelector('div').classList.add('border-amber-200');
+
+                    caseContents.forEach(content => {
+                        if (content.id === contentId) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            const choiceCards = document.querySelectorAll('.choice-card');
+            choiceCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    choiceCards.forEach(c => {
+                        c.classList.remove('border-teal-600', 'opacity-100');
+                        c.classList.add('border-stone-300', 'opacity-70');
+                    });
+                    card.classList.add('border-teal-600', 'opacity-100');
+                    card.classList.remove('border-stone-300', 'opacity-70');
+                });
+            });
+            
+            const processSteps = document.querySelectorAll('.process-step');
+            const processContents = document.querySelectorAll('.process-content');
+            processSteps.forEach(step => {
+                step.addEventListener('click', () => {
+                    const stepNum = step.dataset.step;
+                    
+                    processSteps.forEach(s => s.classList.remove('active'));
+                    step.classList.add('active');
+
+                    processContents.forEach(content => {
+                        if (content.id === `process-content-${stepNum}`) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            const nvcBtn = document.getElementById('nvc-transform-btn');
+            const nvcAfter = document.getElementById('nvc-after');
+            nvcBtn.addEventListener('click', () => {
+                nvcAfter.classList.toggle('hidden');
+                nvcBtn.textContent = nvcAfter.classList.contains('hidden') ? '↓ 運用 NVC 轉化 ↓' : '↑ 收合 ↑';
+            });
+            
+            const ctx = document.getElementById('choiceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['關係修復', '教育意義', '當事人賦權', '事實釐清', '責任追究'],
+                    datasets: [{
+                        label: '調和程序',
+                        data: [5, 5, 4, 3, 2],
+                        backgroundColor: 'rgba(13, 148, 136, 0.2)',
+                        borderColor: 'rgba(13, 148, 136, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(13, 148, 136, 1)'
+                    }, {
+                        label: '調查程序',
+                        data: [2, 2, 1, 5, 5],
+                        backgroundColor: 'rgba(113, 113, 122, 0.2)',
+                        borderColor: 'rgba(113, 113, 122, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(113, 113, 122, 1)'
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            pointLabels: { font: { size: 12 }, color: '#333' },
+                            suggestedMin: 0,
+                            suggestedMax: 5,
+                            ticks: {
+                                stepSize: 1,
+                                backdropColor: 'rgba(255, 255, 255, 0.75)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.raw;
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
